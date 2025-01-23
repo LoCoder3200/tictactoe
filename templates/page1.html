@@ -2,15 +2,46 @@
 
 {% set active_page = "page1" %}
 
-{% block title %}page1{% endblock %}
+{% block title %}Tic Tac Toe Game{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+{% endblock %}
 
 {% block content %}
-  <h1>This is Page 1</h1>
+    <p class="game-instructions">
+        Tic Tac Toe is a classic two-player strategy game played on a 3x3 grid.
+		Players take turns marking empty squares with their symbol (X or O).
+		The goal is to get three of your symbols in a row - horizontally, vertically, or diagonally.
+		The first player to create a line of three wins the game.
+		If all squares are filled without a winner, the game is a draw.
+		Strategy is key: block your opponent's potential lines while trying to create your own winning combination.
+    </p>
+    
+    <!-- Your game container and other content goes here -->
+	
+    <section>
+        <h1 class="game--title">Tic Tac Toe</h1>
+        <div class="game--container">
+            <div data-cell-index="0" class="cell"></div>
+            <div data-cell-index="1" class="cell"></div>
+            <div data-cell-index="2" class="cell"></div>
+            <div data-cell-index="3" class="cell"></div>
+            <div data-cell-index="4" class="cell"></div>
+            <div data-cell-index="5" class="cell"></div>
+            <div data-cell-index="6" class="cell"></div>
+            <div data-cell-index="7" class="cell"></div>
+            <div data-cell-index="8" class="cell"></div>
+        </div>
+        <h3 class="game--status"></h3>
+        <button class="game--restart">Restart Game</button>
+    </section>
+	<script src="{{ url_for('static', filename='script.js') }}"></script>
 
-  <p>Lorem ipsum sit dolor amet.</p>
+{% endblock %}
 
-  <pre>
-    {{ dump_user_data }}
-  </pre>
-
+{% block scripts %}
+    {{ super() }}
+    
 {% endblock %}

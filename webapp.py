@@ -11,7 +11,7 @@ import sys
  
 app = Flask(__name__)
 
-app.debug = False #Change this to False for production
+app.debug = True #Change this to False for production
 #os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' #Remove once done debugging
 
 app.secret_key = os.environ['SECRET_KEY'] #used to sign session cookies
@@ -26,7 +26,7 @@ github = oauth.remote_app(
     request_token_params={'scope': 'user:email'}, #request read-only access to the user's email.  For a list of possible scopes, see developer.github.com/apps/building-oauth-apps/scopes-for-oauth-apps
     base_url='https://api.github.com/',
     request_token_url=None,
-    access_token_method='POST',
+    access_token_method='POST', 
     access_token_url='https://github.com/login/oauth/access_token',  
     authorize_url='https://github.com/login/oauth/authorize' #URL for github's OAuth login
 )
@@ -35,7 +35,7 @@ github = oauth.remote_app(
 url = os.environ["MONGO_CONNECTION_STRING"]
 client = pymongo.MongoClient(url)
 db = client[os.environ["MONGO_DBNAME"]]
-collection = db['coolcollection'] #TODO: put the name of the collection here
+collection = db['ohiotictac'] #TODO: put the name of the collection here
 
 # Send a ping to confirm a successful connection
 try:
@@ -49,52 +49,74 @@ except Exception as e:
 #this context processor adds the variable logged_in to the conext for all templates
 @app.context_processor
 def inject_logged_in():
-    return {"logged_in":('github_token' in session)}
+    is_logged_in = 'github_token' in session #this will be true if the token is in the session and false otherwise
+    return {"logged_in":is_logged_in}
 
 @app.route('/')
 def home():
     return render_template('home.html')
 
-#redirect to GitHub's OAuth page and confirm callback URL
 @app.route('/login')
 def login():   
-    return github.authorize(callback=url_for('authorized', _external=True, _scheme='https')) #callback URL must match the pre-configured callback URL
+    return github.authorize(callback=url_for('authorized', _external=True, _scheme='http')) #callback URL must match the pre-configured callback URL
 
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('You were logged out.')
-    return redirect('/')
+    return render_template('message.html', message='You were logged out')
 
 @app.route('/login/authorized')
 def authorized():
     resp = github.authorized_response()
     if resp is None:
         session.clear()
-        flash('Access denied: reason=' + request.args['error'] + ' error=' + request.args['error_description'] + ' full=' + pprint.pformat(request.args), 'error')      
+        message = 'Access denied: reason=' + request.args['error'] + ' error=' + request.args['error_description'] + ' full=' + pprint.pformat(request.args)      
     else:
         try:
             session['github_token'] = (resp['access_token'], '') #save the token to prove that the user logged in
             session['user_data']=github.get('user').data
-            message = 'You were successfully logged in as ' + session['user_data']['login'] + '.'
+            #pprint.pprint(vars(github['/email']))
+            #pprint.pprint(vars(github['api/2/accounts/profile/']))
+            message='You were successfully logged in as ' + session['user_data']['login'] + '.'
         except Exception as inst:
             session.clear()
             print(inst)
-            message = 'Unable to login, please try again.', 'error'
+            message='Unable to login, please try again.  '
     return render_template('message.html', message=message)
 
 
 @app.route('/page1')
 def renderPage1():
+    firstPost=get_posts()
     if 'user_data' in session:
-        user_data_pprint = pprint.pformat(session['user_data'])#format the user data nicely
+        followers = session['user_data']['followers']
     else:
-        user_data_pprint = '';
-    return render_template('page1.html',dump_user_data=user_data_pprint)
-
+        followers = 'no'; #needs fixing
+        firstPost=get_posts()  
+    return render_template('page1.html', follower_user_data=followers, firstPost = firstPost)
 @app.route('/page2')
 def renderPage2():
     return render_template('page2.html')
+@app.route('/ForumOne',methods=['GET','POST'])
+def renderForumOneAnswers():
+    firstPost=get_posts()
+    if "user_data" in session:
+        firstPost=request.form['ques1']
+        doc = {"username":session['user_data']['login'], "number":"ee","text":firstPost}
+     
+        collection.insert_one(doc)
+    for anything in collection.find():
+        firstPost=anything["text"]
+        firstPost=get_posts()
+    return render_template('page1.html',firstPost = firstPost)
+def get_posts():
+    option = []
+    for s in collection.find():
+        formatted_post = f"<pre>{s['username']} : {s['text']}</pre>"
+        option.append(formatted_post)
+    
+    return Markup((option))
+
 
 #the tokengetter is automatically called to check who is logged in.
 @github.tokengetter

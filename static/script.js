@@ -1,50 +1,3 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f8f9fa;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-.game--container {
-    display: grid;
-    grid-template-columns: repeat(3, auto);
-    width: 306px;
-    margin: 50px auto;
-}
-
-.cell {
-    width: 100px;
-    height: 100px;
-    border: 1px solid #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 60px;
-    cursor: pointer;
-}
-
-.game--title {
-    text-align: center;
-}
-
-.game--status {
-    margin: 20px auto;
-    text-align: center;
-}
-
-.game--restart {
-    display: block;
-    margin: 20px auto;
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
 const statusDisplay = document.querySelector('.game--status');
 
 let gameActive = true;
@@ -57,10 +10,10 @@ const winningMessage = () => `Player ${currentPlayer} has won!`;
 const drawMessage = () => `Game ended in a draw!`;
 const currentPlayerTurn = () => `It's ${currentPlayer}'s turn`;
 
-statusDisplay.innerHTML = currentPlayerTurn();
+//statusDisplay.innerHTML = currentPlayerTurn();
 
 document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
-document.querySelector('.game--restart').addEventListener('click', handleRestartGame);
+//document.querySelector('.game--restart').addEventListener('click', handleRestartGame);
 
 function handleCellClick(clickedCellEvent) {   
         const clickedCell = clickedCellEvent.target;
@@ -127,6 +80,8 @@ function handlePlayerChange() {
     currentPlayer = currentPlayer === "X" ? "O" : "X";
     statusDisplay.innerHTML = currentPlayerTurn();
 }
+
+document.querySelector('.game--restart').addEventListener('click', handleRestartGame);
 
 function handleRestartGame() {
     gameActive = true;
